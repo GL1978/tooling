@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issues Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #00796b;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .form-group > div {
+            flex: 1 1 100px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #00796b;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #b2dfdb;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: #e0f2f1;
+            color: #004d40;
+        }
+        input[type="text"]:focus, textarea:focus, select:focus {
+            border-color: #00796b;
+            outline: none;
+        }
+        textarea {
+            resize: vertical;
+        }
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .radio-group input[type="radio"] {
+            margin-right: 5px;
+        }
+        .radio-group label {
+            font-weight: normal;
+            color: #004d40;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #004d40;
+        }
+        .row-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .add-row, .delete-row {
+            padding: 10px;
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .add-row:hover, .delete-row:hover {
+            background-color: #b71c1c;
+        }
+        .multi-select {
+            position: relative;
+            display: inline-block;
+        }
+        .select-box {
+            position: relative;
+        }
+        .overSelect {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+        }
+        .checkboxes {
+            display: none;
+            border: 1px solid #b2dfdb;
+            border-top: none;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            background-color: #e0f2f1;
+            max-height: 150px;
+            overflow-y: auto;
+            position: absolute;
+            z-index: 1;
+            width: 100%;
+        }
+        .checkboxes label {
+            display: block;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: normal;
+            color: #004d40;
+        }
+        .checkboxes label:hover {
+            background-color: #00796b;
+            color: white;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Issues Generator</h1>
+<div id="form-container"></div>
+<button class="add-row" onclick="addRow()">Add Row</button>
+<div class="buttons">
+    <button class="render" onclick="renderForm()">Preview Data</button>
+    <button class="submit" onclick="submitForm()">Export Data</button>
+</div>
+<pre id="output" style="background: #e0f2f1; padding: 20px;"></pre>
+
+<script>
+    const dealstores = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const tags = ['t1', 't2', 't3', 't4'];
+    const assignees = ['a1', 'a2', 'a3', 'a4'];
+
+    function addRow() {
+        const formContainer = document.getElementById('form-container');
+        const row = document.createElement('div');
+        row.classList.add('container');
+        row.innerHTML = `
+            <div class="form-group">
+                <div>
+                    <label for="canonical-name">Canonical Name</label>
+                    <input type="text" name="canonical-name">
+                </div>
+                <div>
+                    <label for="dealstores">Dealstores</label>
+                    <div class="multi-select">
+                        <div class="select-box" onclick="showCheckboxes(this)">
+                            <select name="dealstores">
+                                <option>Select options</option>
+                            </select>
+                            <div class="overSelect"></div>
+                        </div>
+                        <div class="checkboxes dealstores">${dealstores.map(ds => `<label><input type="checkbox" value="${ds}"/> ${ds}</label>`).join('')}</div>
+                    </div>
+                </div>
+                <div>
+                    <label>Is CR</label>
+                    <div class="radio-group">
+                        <input type="radio" name="is-cr" value="yes">
+                        <label for="cr-yes">Yes</label>
+                        <input type="radio" name="is-cr" value="no" checked>
+                        <label for="cr-no">No</label>
+                    </div>
+                </div>
+                <div>
+                    <label for="cr-number">CR Number</label>
+                    <input type="text" name="cr-number">
+                </div>
+                <div>
+                    <label for="epic-link">Epic Link</label>
+                    <input type="text" name="epic-link">
+                </div>
+                <div>
+                    <label for="demand-link">Demand Link</label>
+                    <input type="text" name="demand-link">
+                </div>
+                <div>
+                    <label for="cmf-link">CMF Link</label>
+                    <input type="text" name="cmf-link">
+                </div>
+                <div>
+                    <label for="description">Description</label>
+                    <textarea name="description" rows="2"></textarea>
+                </div>
+                <div>
+                    <label for="tags">Tags</label>
+                    <div class="multi-select">
+                        <div class="select-box" onclick="showCheckboxes(this)">
+                            <select name="tags">
+                                <option>Select options</option>
+                            </select>
+                            <div class="overSelect"></div>
+                        </div>
+                        <div class="checkboxes tags">${tags.map(tag => `<label><input type="checkbox" value="${tag}"/> ${tag}</label>`).join('')}</div>
+                    </div>
+                </div>
+                <div>
+                    <label for="assignee">Assignee</label>
+                    <select name="assignee">${assignees.map(assignee => `<option value="${assignee}">${assignee}</option>`).join('')}</select>
+                </div>
+            </div>
+            <div class="row-controls">
+                <button class="delete-row" onclick="deleteRow(this)">Delete Row</button>
+            </div>
+        `;
+        formContainer.appendChild(row);
+    }
+
+    function showCheckboxes(element) {
+        const checkboxes = element.nextElementSibling;
+        if (checkboxes.style.display === "none") {
+            checkboxes.style.display = "block";
+        } else {
+            checkboxes.style.display = "none";
+        }
+    }
+
+    function deleteRow(button) {
+        const row = button.closest('.container');
+        row.remove();
+    }
+
+    function renderForm() {
+        const data = collectData();
+        if (!data) {
+            return;
+        }
+
+        const csvContent = data.map(e => e.map(field => field.includes(',') ? `"${field}"` : field).join(",")).join("\n");
+        const output = document.getElementById('output');
+        output.textContent = csvContent;
+    }
+
+    function submitForm() {
+        const data = collectData();
+        if (!data) {
+            return;
+        }
+
+        const csvContent = "data:text/csv;charset=utf-8," +
+            data.map(e => e.map(field => field.includes(',') ? `"${field}"` : field).join(",")).join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "form_data.csv");
+        document.body.appendChild(link);
+        link.click();
+    }
+
+    function collectData() {
+        const formContainer = document.getElementById('form-container');
+        const rows = formContainer.getElementsByClassName('container');
+        const data = [];
+
+        for (const row of rows) {
+            let canonicalName = row.querySelector('input[name="canonical-name"]').value;
+            if (canonicalName == null || canonicalName.trim().length < 2) {
+                alert('Canonical Name must not be empty and must be at least 3 characters in length');
+                return false;
+            }
+            const selectedDealstores = Array.from(row.querySelectorAll('.dealstores input:checked')).map(cb => cb.value);
+            if (selectedDealstores.length == 0) {
+                alert('Please select at least 1 dealstore');
+                return false;
+            }
+            const isCr = row.querySelector('input[name="is-cr"]:checked')?.value || '';
+            const crNumber = row.querySelector('input[name="cr-number"]').value;
+            if (isCr == 'yes') {
+                if (crNumber == null || crNumber.trim().length == 0) {
+                    alert('CR number must be input as Is CR is yes');
+                    return false;
+                }
+                canonicalName = `CR ${crNumber} ${canonicalName}`
+            }
+            const epicLink = row.querySelector('input[name="epic-link"]').value;
+            const demandLink = row.querySelector('input[name="demand-link"]').value;
+            const cmfLink = row.querySelector('input[name="cmf-link"]').value;
+            const selectedTags = Array.from(row.querySelectorAll('.tags input:checked')).map(cb => cb.value).join(',');
+            const assignee = row.querySelector('select[name="assignee"]').value;
+            let descriptionString = row.querySelector('textarea[name="description"]').value;
+            let description = {
+                epicLink: epicLink,
+                demandLink: demandLink,
+                cmfLink: cmfLink,
+                tags: selectedTags,
+                assignee: assignee
+            };
+
+            for (const [key, value] of Object.entries(description)) {
+                if (value == null || value.trim().length == 0) {
+                    continue;
+                }
+                descriptionString += '\n'
+                switch (key) {
+                    case 'epicLink':
+                        descriptionString += `/epic ${value}`
+                        descriptionString += '\n'
+                        break;
+                    case 'demandLink':
+                        descriptionString += `/relate ${value}`
+                        descriptionString += '\n'
+                        break;
+                    case 'cmfLink':
+                        descriptionString += `/relate ${value}`
+                        descriptionString += '\n'
+                        break;
+                    case 'tags':
+                        descriptionString += '/labels '
+                        for (const tag of value.split(',')) {
+                            descriptionString += ` ~"${tag}"`
+                        }
+                        descriptionString += '\n'
+                        break;
+                    case 'assignee':
+                        descriptionString += `/assign ${value}`
+                        descriptionString += '\n'
+                        break;
+                }
+            }
+
+            selectedDealstores.forEach(dealstore => {
+                data.push([canonicalName, dealstore, descriptionString]);
+            });
+        }
+
+        console.log(data);
+        return data;
+    }
+
+    // Add initial row
+    addRow();
+
+</script>
+</body>
+</html>
