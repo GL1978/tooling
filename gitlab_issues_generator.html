@@ -345,7 +345,7 @@
             }
 
             selectedDealstores.forEach(dealstore => {
-                data.push([canonicalName, dealstore, descriptionString]);
+                data.push([dealstore + ": " + canonicalName, descriptionString]);
             });
         }
 
