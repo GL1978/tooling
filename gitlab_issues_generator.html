@@ -6,140 +6,142 @@
     <title>Issues Generator</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #e0f7fa;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: #00796b;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .form-group > div {
-            flex: 1 1 100px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #00796b;
-        }
-        input[type="text"], textarea, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #b2dfdb;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 16px;
-            background-color: #e0f2f1;
-            color: #004d40;
-        }
-        input[type="text"]:focus, textarea:focus, select:focus {
-            border-color: #00796b;
-            outline: none;
-        }
-        textarea {
-            resize: vertical;
-        }
-        .radio-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .radio-group input[type="radio"] {
-            margin-right: 5px;
-        }
-        .radio-group label {
-            font-weight: normal;
-            color: #004d40;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #00796b;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #004d40;
-        }
-        .row-controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-top: 10px;
-        }
-        .add-row, .delete-row {
-            padding: 10px;
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .add-row:hover, .delete-row:hover {
-            background-color: #b71c1c;
-        }
-        .multi-select {
-            position: relative;
-            display: inline-block;
-        }
-        .select-box {
-            position: relative;
-        }
-        .overSelect {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-        }
-        .checkboxes {
-            display: none;
-            border: 1px solid #b2dfdb;
-            border-top: none;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            background-color: #e0f2f1;
-            max-height: 150px;
-            overflow-y: auto;
-            position: absolute;
-            z-index: 1;
-            width: 100%;
-        }
-        .checkboxes label {
-            display: block;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-weight: normal;
-            color: #004d40;
-        }
-        .checkboxes label:hover {
-            background-color: #00796b;
-            color: white;
-        }
-        .buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
+             font-family: Arial, sans-serif;
+             background-color: #e0f7fa;
+             margin: 0;
+             padding: 20px;
+         }
+         .container {
+             background-color: #ffffff;
+             padding: 20px;
+             border-radius: 8px;
+             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+             margin-bottom: 20px;
+         }
+         h1 {
+             text-align: center;
+             color: #00796b;
+             margin-bottom: 20px;
+         }
+         .form-group {
+             display: flex;
+             flex-wrap: wrap;
+             gap: 10px;
+             margin-bottom: 15px;
+         }
+         .form-group > div {
+             flex: 1 1 100px;
+         }
+         label {
+             display: block;
+             margin-bottom: 5px;
+             font-weight: bold;
+             color: #00796b;
+         }
+         input[type="text"], textarea, select {
+             width: 100%;
+             padding: 10px;
+             border: 1px solid #b2dfdb;
+             border-radius: 4px;
+             box-sizing: border-box;
+             font-size: 16px;
+             background-color: #e0f2f1;
+             color: #004d40;
+         }
+         input[type="text"]:focus, textarea:focus, select:focus {
+             border-color: #00796b;
+             outline: none;
+         }
+         textarea {
+             resize: vertical;
+         }
+         .radio-group {
+             display: flex;
+             gap: 10px;
+             align-items: center;
+         }
+         .radio-group input[type="radio"] {
+             margin-right: 5px;
+         }
+         .radio-group label {
+             font-weight: normal;
+             color: #004d40;
+         }
+         button {
+             padding: 10px 20px;
+             background-color: #00796b;
+             color: white;
+             border: none;
+             border-radius: 4px;
+             font-size: 16px;
+             cursor: pointer;
+         }
+         button:hover {
+             background-color: #004d40;
+         }
+         .row-controls {
+             display: flex;
+             gap: 10px;
+             align-items: center;
+             margin-top: 10px;
+         }
+         .add-row, .delete-row {
+             padding: 10px;
+             background-color: #d32f2f;
+             color: white;
+             border: none;
+             border-radius: 4px;
+             font-size: 16px;
+             cursor: pointer;
+         }
+         .add-row:hover, .delete-row:hover {
+             background-color: #b71c1c;
+         }
+         .multi-select {
+             position: relative;
+             display: inline-block;
+             width: 200px; /* Adjusted width */
+         }
+         .select-box {
+             position: relative;
+             width: 100%;
+         }
+         .overSelect {
+             position: absolute;
+             left: 0;
+             right: 0;
+             top: 0;
+             bottom: 0;
+         }
+         .checkboxes {
+             display: none;
+             border: 1px solid #b2dfdb;
+             border-top: none;
+             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+             background-color: #e0f2f1;
+             max-height: 150px;
+             overflow-y: auto;
+             position: absolute;
+             z-index: 1;
+             width: 100%;
+         }
+         .checkboxes label {
+             display: block;
+             padding: 8px 12px;
+             cursor: pointer;
+             font-weight: normal;
+             color: #004d40;
+         }
+         .checkboxes label:hover {
+             background-color: #00796b;
+             color: white;
+         }
+         .buttons {
+             display: flex;
+             gap: 10px;
+             justify-content: center;
+             margin-top: 20px;
+         }
     </style>
 </head>
 <body>
@@ -155,7 +157,11 @@
 <script>
     const dealstores = ['A', 'B', 'C', 'D', 'E', 'F'];
     const tags = ['t1', 't2', 't3', 't4'];
-    const assignees = ['a1', 'a2', 'a3', 'a4'];
+    const assignees = {
+        'a': 'a1',
+        'b': 'b1',
+        'c': 'c1'
+    }
 
     function addRow() {
         const formContainer = document.getElementById('form-container');
@@ -222,7 +228,7 @@
                 </div>
                 <div>
                     <label for="assignee">Assignee</label>
-                    <select name="assignee">${assignees.map(assignee => `<option value="${assignee}">${assignee}</option>`).join('')}</select>
+                    <select name="assignee">${Object.entries(assignees).map(([key, value]) => `<option value="${value}">${key} - ${value}</option>`).join('')}</select>
                 </div>
             </div>
             <div class="row-controls">
@@ -345,7 +351,7 @@
             }
 
             selectedDealstores.forEach(dealstore => {
-                data.push([dealstore + ": " + canonicalName, descriptionString]);
+                data.push([canonicalName, dealstore, descriptionString]);
             });
         }
 
