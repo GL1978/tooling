@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON Panes</title>
+    <title>Override Tool</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,6 +50,18 @@
             text-align: center;
             font-weight: bold;
             margin-bottom: 10px;
+            background-color: #28a745; /* Green background color */
+            color: #fff; /* White text color */
+            padding: 10px 20px; /* Padding around text */
+            border: none; /* Remove border */
+            border-radius: 4px; /* Rounded corners */
+            cursor: default; /* Use default cursor */
+            transition: background-color 0.3s; /* Smooth transition for background color */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Shadow for depth */
+        }
+
+        .pane-title:hover {
+            background-color: #218838; /* Darker green on hover */
         }
 
         textarea {
@@ -123,10 +135,30 @@
         .test-button:hover {
             background-color: #218838;
         }
+
+        .heading {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background-color: #28a745; /* Green background color */
+            color: #fff; /* White text color */
+            padding: 10px 20px; /* Padding around text */
+            border: none; /* Remove border */
+            border-radius: 4px; /* Rounded corners */
+            cursor: default; /* Use default cursor */
+            transition: background-color 0.3s; /* Smooth transition for background color */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Shadow for depth */
+        }
+
+        .heading:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
     </style>
 </head>
 <body>
 <div class="container">
+    <div class="heading">Override Tool</div>
     <div class="row" style="height: 35%;">
         <div class="pane">
             <div class="pane-title">Input Canonical JSON</div>
@@ -216,56 +248,132 @@
         document.getElementById('output-json').value = JSON.stringify(mergedJson, null, 2);
     }
 
-    function mergeDeep(target, source) {
-        if (!Array.isArray(target) || !Array.isArray(source)) {
-            if (!(typeof target === 'object' && target !== null && typeof source === 'object' && source !== null)) {
-                return source;
+    function parsePath(path) {
+        // Split the path into segments
+        const regex = /(\w+|\[\d+\])/g;
+        const segments = path.match(regex);
+        return segments.map(segment => {
+            // Convert array notation to actual numbers
+            if (segment.startsWith('[') && segment.endsWith(']')) {
+                return parseInt(segment.slice(1, -1), 10);
             }
-            // If both target and source are objects, merge them by key
-            for (let key in source) {
-                if (source.hasOwnProperty(key)) {
-                    target[key] = mergeDeep(target[key], source[key]);
-                }
+            return segment;
+        });
+    }
+
+    function pathExists(target, path) {
+        const segments = parsePath(path);
+        let current = target;
+
+        for (let segment of segments) {
+            if (current == null || !(segment in current)) {
+                return false;
             }
-            return target;
+            current = current[segment];
         }
-        // If both target and source are arrays, merge them by index
-        source.forEach((item, index) => {
-            if (index in target) {
-                target[index] = mergeDeep(target[index], item);
+        return true;
+    }
+
+    function setValueByPath(target, path, value) {
+        const segments = parsePath(path);
+        let current = target;
+
+        segments.forEach((segment, index) => {
+            if (index === segments.length - 1) {
+                current[segment] = value;
             } else {
-                target[index] = item;
+                if (typeof segments[index + 1] === 'number') {
+                    if (!Array.isArray(current[segment])) {
+                        current[segment] = [];
+                    }
+                } else {
+                    if (typeof current[segment] !== 'object' || current[segment] === null) {
+                        current[segment] = {};
+                    }
+                }
+                current = current[segment];
             }
         });
+    }
+
+    function mergeDeep(target, source) {
+        if (source === null || typeof source !== 'object') {
+            return source;
+        }
+
+        if (typeof target !== 'object' || target === null) {
+            return target;  // If target is not an object, do not merge and return target
+        }
+
+        for (let key in source) {
+            if (!source.hasOwnProperty(key)) continue;
+
+            if (key.includes('[') && key.includes(']')) {
+                if (pathExists(target, key)) {
+                    setValueByPath(target, key, mergeDeep(getValueByPath(target, key), source[key]));
+                }
+            } else if (source[key] === null) {
+                if (key in target) {
+                    target[key] = null;
+                }
+            } else if (typeof source[key] === 'object') {
+                if (key in target) {
+                    target[key] = mergeDeep(target[key], source[key]);
+                }
+            } else {
+                if (key in target) {
+                    target[key] = source[key];
+                }
+            }
+        }
+
         return target;
     }
 
-    const inputJsonExample = {
-      "a": 1,
-      "b": {
-        "c": "d",
-        "extra": "value"
-      },
-      "f": "g",
-      "array": [
-        { "x": 1, "y": 2 },
-        { "x": 3, "y": 4 }
-      ]
+    function getValueByPath(target, path) {
+        const segments = parsePath(path);
+        let current = target;
+
+        for (let segment of segments) {
+            if (current == null || !(segment in current)) {
+                return undefined;
+            }
+            current = current[segment];
+        }
+        return current;
+    }
+
+    // Example usage:
+    const json1 = {
+        "a": 1,
+        "b": {
+            "c": "d",
+            "extra": "value"
+        },
+        "f": "g",
+        "array1": [
+            { "x": 1, "y": 2 }
+        ],
+        "array2": [
+            { "x": 1, "y": 2 }
+        ],
+        "array3": [
+            { "x": 1, "y": 2 }
+        ]
     };
 
-    const overrideJsonExample = {
-      "a": 10,
-      "b": {
-        "c": "e"
-      },
-      "array": [
-        { "x": 10 },
-        { "y": 40, "z": 50 }
-      ]
+    const json2 = {
+        "a": 10,
+        "b": {
+            "c": "e"
+        },
+        "array1[0]": { "x": 10, "y": 20 },
+        "array2": null,
+        "nonExistent": "value"
     };
 
-    document.getElementById('input-json').value = JSON.stringify(inputJsonExample, null, 2);
-    document.getElementById('override-json').value = JSON.stringify(overrideJsonExample, null, 2);
+    document.getElementById('input-json').value = JSON.stringify(json1, null, 2);
+    document.getElementById('override-json').value = JSON.stringify(json2, null, 2);
 </script>
 </body>
 </html>
