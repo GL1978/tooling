@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/jsoneditor@9.5.1/dist/jsoneditor.min.css" rel="stylesheet" type="text/css">
+    <style>
+        body {
+          background-color: #ffffff;
+          color: #000000;
+          font-family: Arial, sans-serif;
+        }
+        .jsoneditor {
+          background-color: #ffffff;
+          color: #000000;
+          font-family: Arial, sans-serif;
+        }
+        .jsoneditor-value, .jsoneditor-key {
+          color: #000000;
+          font-weight: bold;
+        }
+        .jsoneditor-tree .jsoneditor-field {
+          color: #1f77b4; /* Dark blue for keys */
+        }
+        .jsoneditor-tree .jsoneditor-value-string {
+          color: #d62728; /* Dark red for strings */
+        }
+        .jsoneditor-tree .jsoneditor-value-number {
+          color: #2ca02c; /* Green for numbers */
+        }
+        .jsoneditor-tree .jsoneditor-value-boolean {
+          color: #9467bd; /* Purple for booleans */
+        }
+        .jsoneditor-tree .jsoneditor-value-null {
+          color: #8c564b; /* Brown for null */
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/jsoneditor@9.5.1/dist/jsoneditor.min.js"></script>
+    <title>JSONEditor with Improved Readability</title>
+</head>
+<body>
+<div id="jsoneditor" style="width: 100%; height: 500px;"></div>
+<script>
+    // Create the editor
+    const container = document.getElementById("jsoneditor");
+    const options = {
+      mode: "code",
+      modes: ["view", "code", "tree"], // You can add more modes if needed
+    };
+    const editor = new JSONEditor(container, options);
+
+   // Set JSON data
+    const json =
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "John Doe",
+          "age": 30,
+          "email": "john.doe@example.com",
+          "address": {
+            "street": "123 Main St",
+            "city": "Anytown",
+            "state": "CA",
+            "postalCode": "12345"
+          },
+          "phoneNumbers": [
+            {
+              "type": "home",
+              "number": "555-1234"
+            },
+            {
+              "type": "work",
+              "number": "555-5678"
+            }
+          ],
+          "children": [
+            {
+              "name": "Jane Doe",
+              "age": 10,
+              "hobbies": ["reading", "drawing"]
+            },
+            {
+              "name": "Jack Doe",
+              "age": 8,
+              "hobbies": ["soccer", "swimming"]
+            }
+          ],
+          "spouse": {
+            "name": "Jane Doe",
+            "age": 28,
+            "email": "jane.doe@example.com",
+            "occupation": "Teacher"
+          },
+          "otherDetails": {
+            "height": 175,
+            "weight": 70,
+            "isActive": true,
+            "languages": ["English", "Spanish", "French"],
+            "skills": {
+              "programming": ["JavaScript", "Python", "Java"],
+              "design": ["Photoshop", "Illustrator"]
+            }
+          }
+        },
+        {
+          "id": 2,
+          "name": "Jane Smith",
+          "age": 25,
+          "email": "jane.smith@example.com",
+          "address": {
+            "street": "456 Oak Ave",
+            "city": "Othertown",
+            "state": "NY",
+            "postalCode": "54321"
+          },
+          "phoneNumbers": [
+            {
+              "type": "home",
+              "number": "555-4321"
+            },
+            {
+              "type": "work",
+              "number": "555-8765"
+            }
+          ],
+          "children": [
+            {
+              "name": "Jim Smith",
+              "age": 5,
+              "hobbies": ["legos", "painting"]
+            },
+            {
+              "name": "Jenny Smith",
+              "age": 3,
+              "hobbies": ["dancing", "singing"]
+            }
+          ],
+          "spouse": {
+            "name": "John Smith",
+            "age": 30,
+            "email": "john.smith@example.com",
+            "occupation": "Engineer"
+          },
+          "otherDetails": {
+            "height": 160,
+            "weight": 55,
+            "isActive": true,
+            "languages": ["English", "German", "Chinese"],
+            "skills": {
+              "programming": ["C++", "Ruby", "PHP"],
+              "design": ["InDesign", "CorelDRAW"]
+            }
+          }
+        }
+      ]
+    }
+    editor.set(json);
+</script>
+</body>
+</html>
