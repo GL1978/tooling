@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flattened Avro Schema with Attributes</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+          background-color: #f9f9f9;
+        }
+        h1 {
+          color: #333;
+        }
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin-top: 20px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          background-color: #fff;
+        }
+        th, td {
+          border: 1px solid #ddd;
+          padding: 10px;
+          text-align: left;
+        }
+        th {
+          background-color: #4CAF50;
+          color: white;
+        }
+        tr:nth-child(even) {
+          background-color: #f2f2f2;
+        }
+        tr:hover {
+          background-color: #eaf3ff;
+        }
+        td.record-type {
+          background-color: #e7f3e7;
+          font-weight: bold;
+        }
+        td.optional {
+          color: #007BFF;
+          font-weight: bold;
+        }
+        td.no {
+          color: #FF6347;
+          font-weight: bold;
+        }
+        td.default {
+          font-style: italic;
+          color: #555;
+        }
+        td.doc {
+          color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+<h1>Flattened Avro Schema with Attributes</h1>
+<input type="text" id="search-bar" placeholder="Search schema..." oninput="filterTable()" style="margin-bottom: 20px; padding: 8px; width: 100%; box-sizing: border-box;">
+<div id="schema-table"></div>
+
+<script>
+    const schema = {
+      type: "record",
+      name: "Person",
+      fields: [
+        { name: "id", type: "string", doc: "Unique identifier", default: "", deprecated: true, deprecationRemarks: "Use 'uuid' instead" },
+        {
+          name: "name",
+          type: {
+            type: "record",
+            name: "FullName",
+            fields: [
+              { name: "first", type: "string", doc: "First name", maxLength: 50 },
+              { name: "last", type: ["null", "string"], default: null }
+            ]
+          }
+        },
+        { name: "age", type: ["null", "int"], default: null },
+        {
+          name: "address",
+          type: {
+            type: "record",
+            name: "Address",
+            fields: [
+              { name: "street", type: "string" },
+              { name: "city", type: "string", doc: "City of residence", example: "New York" }
+            ]
+          }
+        }
+      ]
+    };
+
+    function filterTable() {
+      const searchTerm = document.getElementById("search-bar").value.toLowerCase();
+      const table = document.querySelector("#schema-table table");
+      const rows = table.querySelectorAll("tr");
+
+      rows.forEach((row, index) => {
+        if (index === 0) return; // Skip header row
+        const cells = Array.from(row.cells);
+        const matches = cells.some(cell => cell.textContent.toLowerCase().includes(searchTerm));
+        row.style.display = matches ? "" : "none";
+      });
+    }
+
+    // Helper function to convert type to a meaningful string
+    function getTypeString(fieldType) {
+      if (typeof fieldType === "string") {
+        return fieldType; // Primitive type
+      }
+      if (Array.isArray(fieldType)) {
+        return fieldType.join(", "); // Union types
+      }
+      if (typeof fieldType === "object" && fieldType.type === "record") {
+        return `record (name: ${fieldType.name})`; // Nested record
+      }
+      return "unknown"; // Fallback for unexpected cases
+    }
+
+    // Extract non-standard attributes
+    function extractAttributes(field) {
+      const standardAttributes = ["name", "type", "doc", "default", "fields"];
+      const extraAttributes = Object.keys(field)
+        .filter(key => !standardAttributes.includes(key))
+        .map(key => `${key}: ${JSON.stringify(field[key])}`)
+        .join(", ");
+      return extraAttributes ? ` (${extraAttributes})` : "";
+    }
+
+    // Function to flatten schema with attributes
+    function flattenSchema(schema, parent = "") {
+      let flatSchema = [];
+      if (schema.type === "record") {
+        schema.fields.forEach(field => {
+          const fieldName = parent ? `${parent}.${field.name}` : field.name;
+          const fieldTypeString = getTypeString(field.type);
+          const isOptional = Array.isArray(field.type) && field.type.includes("null");
+          const isRecord = typeof field.type === "object" && field.type.type === "record";
+
+          const docWithExtras = (field.doc || "") + extractAttributes(field);
+
+          flatSchema.push({
+            name: fieldName,
+            type: fieldTypeString,
+            doc: docWithExtras,
+            default: field.default !== undefined ? field.default : "",
+            optional: isOptional,
+            isRecord: isRecord
+          });
+
+          // Recursively flatten nested records
+          if (isRecord) {
+            flatSchema = flatSchema.concat(flattenSchema(field.type, fieldName));
+          }
+        });
+      }
+      return flatSchema;
+    }
+
+    // Generate HTML Table
+    function generateTable(flatSchema) {
+      const table = document.createElement("table");
+      const headerRow = document.createElement("tr");
+      const headers = ["Field", "Type", "Optional", "Default", "Documentation"];
+      headers.forEach(header => {
+        const th = document.createElement("th");
+        th.textContent = header;
+        headerRow.appendChild(th);
+      });
+      table.appendChild(headerRow);
+
+      flatSchema.forEach(field => {
+        const row = document.createElement("tr");
+        const nameCell = document.createElement("td");
+        nameCell.textContent = field.name;
+        const typeCell = document.createElement("td");
+        typeCell.textContent = field.type;
+        typeCell.className = field.isRecord ? "record-type" : "";
+
+        const optionalCell = document.createElement("td");
+        optionalCell.textContent = field.optional ? "Yes" : "No";
+        optionalCell.className = field.optional ? "optional" : "no";
+
+        const defaultCell = document.createElement("td");
+        defaultCell.textContent = field.default === null ? "null" : field.default;
+        defaultCell.className = "default";
+
+        const docCell = document.createElement("td");
+        docCell.textContent = field.doc;
+        docCell.className = "doc";
+
+        row.appendChild(nameCell);
+        row.appendChild(typeCell);
+        row.appendChild(optionalCell);
+        row.appendChild(defaultCell);
+        row.appendChild(docCell);
+        table.appendChild(row);
+      });
+
+      return table;
+    }
+
+    // Flatten schema and render table
+    const flatSchema = flattenSchema(schema);
+    const schemaTable = generateTable(flatSchema);
+    document.getElementById("schema-table").appendChild(schemaTable);
+</script>
+</body>
+</html>
