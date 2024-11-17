@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flattened Avro Schema with Attributes</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+          background-color: #f9f9f9;
+        }
+        h1 {
+          color: #333;
+        }
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin-top: 20px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          background-color: #fff;
+        }
+        th, td {
+          border: 1px solid #ddd;
+          padding: 10px;
+          text-align: left;
+        }
+        th {
+          background-color: #4CAF50;
+          color: white;
+        }
+        tr:nth-child(even) {
+          background-color: #f2f2f2;
+        }
+        tr:hover {
+          background-color: #eaf3ff;
+        }
+        td.record-type {
+          background-color: #e7f3e7;
+          font-weight: bold;
+        }
+        td.optional {
+          color: #007BFF;
+          font-weight: bold;
+        }
+        td.no {
+          color: #FF6347;
+          font-weight: bold;
+        }
+        td.default {
+          font-style: italic;
+          color: #555;
+        }
+        td.doc {
+          color: #6c757d;
+        }
+
+        /* Container styling for the search bar */
+        .search-bar-container {
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background-color: #f9fff9;
+          padding: 10px;
+          border: 1px solid #cce5cc;
+          border-radius: 4px;
+        }
+
+        /* Search bar input field */
+        .search-bar {
+          flex-grow: 1;
+          padding: 8px;
+          border: 1px solid #cce5cc;
+          border-radius: 4px;
+          font-size: 14px;
+        }
+
+        /* Dropdown styling */
+        .search-dropdown {
+          padding: 8px;
+          border: 1px solid #cce5cc;
+          border-radius: 4px;
+          font-size: 14px;
+          background-color: white;
+        }
+
+        /* Button styling */
+        .search-button {
+          padding: 8px 12px;
+          border: 1px solid #cce5cc;
+          border-radius: 4px;
+          background-color: #dff0d8;
+          color: #3c763d;
+          font-size: 14px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+
+        .search-button:hover {
+          background-color: #cce5cc;
+          color: #2b542c;
+        }
+
+    </style>
+</head>
+<body>
+<h1>Flattened Avro Schema with Attributes</h1>
+
+<div class="search-bar-container">
+    <input
+            type="text"
+            id="search-bar"
+            placeholder="Search schema..."
+            class="search-bar"
+            oninput="filterTable()">
+    <select
+            id="search-column"
+            class="search-dropdown"
+            onchange="filterTable()">
+        <option value="all">All Columns</option>
+        <option value="field">Field name</option>
+    </select>
+    <button
+            id="filter-cid"
+            onclick="toggleFilter('cid')"
+            class="search-button">
+        Show Fields with cid: true
+    </button>
+    <button
+            id="filter-deprecation"
+            onclick="toggleFilter('deprecation')"
+            class="search-button">
+        Show Deprecated Fields Only
+    </button>
+</div>
+
+
+<div id="schema-table"></div>
+
+<script>
+    const schema = {
+      type: "record",
+      name: "Person",
+      fields: [
+        { name: "id", type: "string", doc: "Unique identifier", default: "", cid: true, deprecated: true, deprecationRemarks: "Use 'uuid' instead" },
+        {
+          name: "name",
+          type: {
+            type: "record",
+            name: "FullName",
+            fields: [
+              { name: "first", type: "string", doc: "First name", maxLength: 50 },
+              { name: "last", type: ["null", "string"], default: null }
+            ]
+          }
+        },
+        { name: "age", type: ["null", "int"], default: null },
+        {
+          name: "address",
+          type: {
+            type: "record",
+            name: "Address",
+            fields: [
+              { name: "street", type: "string" },
+              { name: "city", type: "string", doc: "City of residence", example: "New York" }
+            ]
+          }
+        }
+      ]
+    };
+
+    // Helper function to convert type to a meaningful string
+    function getTypeString(fieldType) {
+      if (typeof fieldType === "string") {
+        return fieldType; // Primitive type (e.g., "string", "int")
+      }
+
+      if (Array.isArray(fieldType)) {
+        // Union types: Array of types (e.g., ["string", "int"])
+        return fieldType.map(getTypeString).join(" | ");
+      }
+
+      if (typeof fieldType === "object") {
+        // Handle complex types based on type key
+        if (fieldType.type === "record") {
+          // Record type: {"type": "record", "name": "RecordName", "fields": [...]}
+          return `record (name: ${fieldType.name})`;
+        }
+
+        if (fieldType.type === "enum") {
+          // Enum type: {"type": "enum", "name": "EnumName", "symbols": [...]}
+          return `enum (name: ${fieldType.name}, symbols: [${fieldType.symbols.join(", ")}])`;
+        }
+
+        if (fieldType.type === "array") {
+          // Array type: {"type": "array", "items": {...}}
+          return `array (items: ${getTypeString(fieldType.items)})`;
+        }
+
+        if (fieldType.type === "map") {
+          // Map type: {"type": "map", "values": {...}}
+          return `map (values: ${getTypeString(fieldType.values)})`;
+        }
+
+        if (fieldType.type === "fixed") {
+          // Fixed type: {"type": "fixed", "name": "FixedName", "size": 16}
+          return `fixed (name: ${fieldType.name}, size: ${fieldType.size})`;
+        }
+
+        if (fieldType.type === "null") {
+          // Null type: {"type": "null"}
+          return "null";
+        }
+
+        if (fieldType.type === "boolean") {
+          // Boolean type: {"type": "boolean"}
+          return "boolean";
+        }
+
+        if (fieldType.type === "bytes") {
+          // Bytes type: {"type": "bytes"}
+          return "bytes";
+        }
+
+        if (fieldType.type === "int") {
+          // Int type: {"type": "int"}
+          return "int";
+        }
+
+        if (fieldType.type === "long") {
+          // Long type: {"type": "long"}
+          return "long";
+        }
+
+        if (fieldType.type === "float") {
+          // Float type: {"type": "float"}
+          return "float";
+        }
+
+        if (fieldType.type === "double") {
+          // Double type: {"type": "double"}
+          return "double";
+        }
+
+        if (fieldType.type === "string") {
+          // String type: {"type": "string"}
+          return "string";
+        }
+
+        if (fieldType.type === "date") {
+          // Date type: {"type": "date"}
+          return "date";
+        }
+
+        if (fieldType.type === "timestamp-millis") {
+          // Timestamp-millis type: {"type": "timestamp-millis"}
+          return "timestamp-millis";
+        }
+
+        if (fieldType.type === "timestamp-micros") {
+          // Timestamp-micros type: {"type": "timestamp-micros"}
+          return "timestamp-micros";
+        }
+
+        if (fieldType.type === "decimal") {
+          // Decimal type: {"type": "decimal", "precision": 12, "scale": 2}
+          return `decimal (precision: ${fieldType.precision}, scale: ${fieldType.scale})`;
+        }
+      }
+
+      // Fallback for unexpected cases
+      return "unknown";
+    }
+
+    // Extract non-standard attributes
+    function extractAttributes(field) {
+      const standardAttributes = ["name", "type", "doc", "default", "fields"];
+      const extraAttributes = Object.keys(field)
+        .filter(key => !standardAttributes.includes(key))
+        .map(key => `${key}: ${JSON.stringify(field[key])}`)
+        .join(", ");
+      return extraAttributes ? ` (${extraAttributes})` : "";
+    }
+
+    // Function to flatten schema with attributes
+    function flattenSchema(schema, parent = "") {
+      let flatSchema = [];
+      if (schema.type === "record") {
+        schema.fields.forEach(field => {
+          const fieldName = parent ? `${parent}.${field.name}` : field.name;
+          const fieldTypeString = getTypeString(field.type);
+          const isOptional = Array.isArray(field.type) && field.type.includes("null");
+          const isRecord = typeof field.type === "object" && field.type.type === "record";
+          const docWithExtras = (field.doc || "") + extractAttributes(field);
+
+          flatSchema.push({
+            name: fieldName,
+            type: fieldTypeString,
+            doc: docWithExtras,
+            default: field.default !== undefined ? field.default : "",
+            optional: isOptional,
+            isRecord: isRecord
+          });
+
+          // Recursively flatten nested records
+          if (isRecord) {
+            flatSchema = flatSchema.concat(flattenSchema(field.type, fieldName));
+          }
+        });
+      }
+      return flatSchema;
+    }
+
+    // Generate HTML Table
+    function generateTable(flatSchema) {
+      const table = document.createElement("table");
+
+      // Create table header row
+      const headerRow = document.createElement("tr");
+      const headers = ["#", "Field", "Type", "Optional", "Default", "Documentation"];
+
+      // Create table headers
+      headers.forEach(header => {
+        const th = document.createElement("th");
+        th.textContent = header;
+        headerRow.appendChild(th);
+      });
+      table.appendChild(headerRow);
+
+      // Add rows for each field in the schema
+      flatSchema.forEach((field, index) => {
+        const row = document.createElement("tr");
+
+        // Row number cell
+        const rowNumberCell = document.createElement("td");
+        rowNumberCell.textContent = index + 1; // Row numbers are 1-based
+        row.appendChild(rowNumberCell);
+
+        // Field name
+        const nameCell = document.createElement("td");
+        nameCell.textContent = field.name;
+        row.appendChild(nameCell);
+
+        // Field type
+        const typeCell = document.createElement("td");
+        typeCell.textContent = field.type;
+        if (field.isRecord) {
+          typeCell.classList.add("record-type"); // Apply record-type class for nested records
+        }
+        row.appendChild(typeCell);
+
+        // Optionality (Yes/No)
+        const optionalCell = document.createElement("td");
+        optionalCell.textContent = field.optional ? "Yes" : "No";
+        optionalCell.classList.add(field.optional ? "optional" : "no"); // Apply 'optional' or 'no' class
+        row.appendChild(optionalCell);
+
+        // Default value
+        const defaultCell = document.createElement("td");
+        defaultCell.textContent = field.default === null ? "null" : field.default;
+        defaultCell.classList.add("default"); // Apply 'default' class for default values
+        row.appendChild(defaultCell);
+
+        // Documentation
+        const docCell = document.createElement("td");
+        docCell.textContent = field.doc || "No documentation available"; // Fallback text if no documentation is provided
+        docCell.classList.add("doc"); // Apply 'doc' class for documentation text
+        row.appendChild(docCell);
+
+        table.appendChild(row);
+      });
+
+      return table;
+    }
+
+let activeFilters = { cid: false, deprecation: false };
+
+function filterTable() {
+  const searchTerm = document.getElementById("search-bar").value.toLowerCase();
+  const searchColumn = document.getElementById("search-column").value;
+  const table = document.querySelector("#schema-table table");
+  const rows = table.querySelectorAll("tr");
+
+  rows.forEach((row, index) => {
+    if (index === 0) return; // Skip header row
+
+    const cells = Array.from(row.cells);
+    let matches = false;
+
+    // Search logic
+    if (searchColumn === "all") {
+      matches = cells.some(cell => cell.textContent.toLowerCase().includes(searchTerm));
+    } else if (searchColumn === "field") {
+      matches = cells[1].textContent.toLowerCase().includes(searchTerm); // Field is in the second column (index 1)
+    }
+
+    // Filter logic: Check if filters are active and if the row matches those filters
+    const docCell = cells[4]; // Documentation column (index 4)
+    const matchesCid = docCell && docCell.textContent.includes("cid: true");
+    const matchesDeprecation = docCell && (docCell.textContent.includes("deprecated: true") || docCell.textContent.includes("deprecationRemarks"));
+    console.log(docCell.textContent, matchesCid, matchesDeprecation);
+
+    // Apply filters
+    if (activeFilters.cid && !matchesCid) {
+      matches = false;
+    }
+    if (activeFilters.deprecation && !matchesDeprecation) {
+      matches = false;
+    }
+
+    // Display or hide the row based on the combination of search and filter results
+    row.style.display = matches ? "" : "none";
+  });
+}
+
+function toggleFilter(type) {
+  // Toggle the filter state for cid or deprecation
+  activeFilters[type] = !activeFilters[type];
+
+  // Update the button styles based on the filter state
+  const button = document.getElementById(type === 'cid' ? 'filter-cid' : 'filter-deprecation');
+  button.style.backgroundColor = activeFilters[type] ? '#cce5cc' : '#dff0d8';
+  button.style.color = activeFilters[type] ? '#2b542c' : '#3c763d';
+
+  // Call filterTable to immediately apply the filters
+  filterTable();
+}
+
+    // Flatten schema and render table
+    const flatSchema = flattenSchema(schema);
+    const schemaTable = generateTable(flatSchema);
+    document.getElementById("schema-table").appendChild(schemaTable);
+</script>
+</body>
+</html>
