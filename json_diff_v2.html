@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nested JSON Comparator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/javascript/javascript.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: nowrap;
+        }
+
+        .textarea-container {
+            position: relative;
+            flex: 1; /* Makes both containers equal width */
+            min-width: 300px; /* Prevents shrinking too much */
+            max-width: 50%; /* Ensures editors don't exceed half the screen width */
+            box-sizing: border-box; /* Include padding in width calculation */
+            margin: 10px 5px 0 0; /* Adds spacing between buttons and other elements */
+        }
+
+        .editor {
+            height: 300px;
+            overflow: auto; /* Enables scrollbars within the editor */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: linear-gradient(145deg, #f0f0f0, #dcdcdc);
+            box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2), -3px -3px 5px rgba(255, 255, 255, 0.7);
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="text"] {
+            width: calc(100% - 80px);
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px; /* Prevents overlap with buttons below */
+        }
+        #searchAndCompareBtn,
+        #compareBtn {
+            display: inline-block;
+            margin: 20px 5px; /* Creates space around these buttons */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        th {
+            background: linear-gradient(90deg, #007BFF, #00C6FF);
+            color: white;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            border-bottom: 2px solid #0056b3;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:nth-child(odd) {
+            background-color: #fff;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .highlight {
+            background-color: #ffebeb;
+        }
+        .highlight td {
+            font-weight: bold;
+            color: #d9534f;
+        }
+    </style>
+</head>
+<body>
+<h1>Nested JSON Comparator</h1>
+<p>Enter two JSON objects for comparison:</p>
+<div class="container">
+    <div class="textarea-container">
+        <label for="transactionId1">Enter Transaction Id:</label><br>
+        <input type="text" id="transactionId1" placeholder="Transaction ID 1">
+        <button onclick="mockSearch('editor1')">Search</button>
+        <button onclick="formatJSON(editor1)">Format</button>
+        <button onclick="clearEditor(editor1)">Clear</button>
+        <div id="editor1" class="editor"></div>
+    </div>
+    <div class="textarea-container">
+        <label for="transactionId2">Enter Transaction Id:</label><br>
+        <input type="text" id="transactionId2" placeholder="Transaction ID 2">
+        <button onclick="mockSearch('editor2')">Search</button>
+        <button onclick="formatJSON(editor2)">Format</button>
+        <button onclick="clearEditor(editor2)">Clear</button>
+        <div id="editor2" class="editor"></div>
+    </div>
+</div>
+<button id="searchAndCompareBtn">Search & Compare JSONs</button>
+&nbsp;
+<button id="compareBtn">Compare JSONs</button>
+<table id="comparisonTable"></table>
+
+<script>
+    let editor1, editor2;
+
+    window.onload = function() {
+        editor1 = CodeMirror(document.getElementById('editor1'), {
+            mode: "application/json",
+            lineNumbers: true,
+            theme: "default",
+            value: ""
+        });
+
+        editor2 = CodeMirror(document.getElementById('editor2'), {
+            mode: "application/json",
+            lineNumbers: true,
+            theme: "default",
+            value: ""
+        });
+    };
+
+    function mockSearch(editorId) {
+        alert(`Mock search for ${editorId}`);
+    }
+
+    function formatJSON(editor) {
+        try {
+            const jsonObject = JSON.parse(editor.getValue());
+            editor.setValue(JSON.stringify(jsonObject, null, 4));
+        } catch (err) {
+            alert('Invalid JSON format. Please correct and try again.');
+        }
+    }
+
+    function clearEditor(editor) {
+        editor.setValue('');
+    }
+
+    // Mock API response function
+    async function mockApi(transactionId) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    transactionId: transactionId,
+                    status: "Success",
+                    details: {
+                        amount: Math.random() * 1000,
+                        timestamp: new Date().toISOString(),
+                    },
+                });
+            }, 1000);
+        });
+    }
+
+    async function searchAndCompareJSONs() {
+        const transactionId1 = document.getElementById("transactionId1").value.trim();
+        const transactionId2 = document.getElementById("transactionId2").value.trim();
+
+        if (!transactionId1 || !transactionId2) {
+            alert("Both transaction IDs are required.");
+            return;
+        }
+
+        try {
+            // Simultaneously fetch mock data for both transaction IDs
+            const [response1, response2] = await Promise.all([
+                mockApi(transactionId1),
+                mockApi(transactionId2),
+            ]);
+
+            // Populate editors with API responses
+            editor1.setValue(JSON.stringify(response1, null, 4));
+            editor2.setValue(JSON.stringify(response2, null, 4));
+
+            // Automatically compare the populated JSONs
+            compareJSONs();
+        } catch (err) {
+            alert("Error fetching data: " + err.message);
+        }
+    }
+
+    function flattenJSON(obj, parentKey = '', result = {}) {
+        for (let key in obj) {
+            const newKey = parentKey ? `${parentKey}.${key}` : key;
+            if (typeof obj[key] === 'object' && obj[key] !== null) {
+                flattenJSON(obj[key], newKey, result);
+            } else {
+                result[newKey] = obj[key];
+            }
+        }
+        return result;
+    }
+
+    function getUnionOfKeys(flattenedJSONs) {
+        const allKeys = new Set();
+        flattenedJSONs.forEach(json => Object.keys(json).forEach(key => allKeys.add(key)));
+        return Array.from(allKeys).sort();
+    }
+
+    function compareJSONs() {
+        const comparisonTable = document.getElementById('comparisonTable');
+        comparisonTable.innerHTML = ''; // Clear previous table
+
+        try {
+            const json1 = editor1.getValue();
+            const json2 = editor2.getValue();
+
+            if (!json1 || !json2) {
+                throw new Error('Both JSON inputs are required for comparison.');
+            }
+
+            const obj1 = JSON.parse(json1);
+            const obj2 = JSON.parse(json2);
+
+            // Flatten the JSON objects
+            const flattened1 = flattenJSON(obj1);
+            const flattened2 = flattenJSON(obj2);
+
+            // Get all unique keys
+            const allKeys = getUnionOfKeys([flattened1, flattened2]);
+
+            // Populate the comparison table
+            const headerRow = comparisonTable.insertRow();
+            headerRow.innerHTML = `<th>Key</th><th>Value 1</th><th>Value 2</th>`;
+
+            allKeys.forEach(key => {
+                const row = comparisonTable.insertRow();
+                const cellKey = row.insertCell(0);
+                const cellValue1 = row.insertCell(1);
+                const cellValue2 = row.insertCell(2);
+
+                cellKey.textContent = key;
+                cellValue1.textContent = flattened1[key] !== undefined ? flattened1[key] : 'N/A';
+                cellValue2.textContent = flattened2[key] !== undefined ? flattened2[key] : 'N/A';
+
+                if (flattened1[key] !== flattened2[key]) {
+                    row.classList.add('highlight');
+                }
+            });
+        } catch (err) {
+            alert('Error during comparison: ' + err.message);
+        }
+    }
+
+    // Event listeners for buttons
+    document.getElementById('searchAndCompareBtn').addEventListener('click', searchAndCompareJSONs);
+    document.getElementById('compareBtn').addEventListener('click', compareJSONs);
+
+    window.onload = function () {
+        const editorHeight = Math.max(300, Math.floor(window.innerHeight * 0.3)); // 40% of screen height, minimum 300px
+
+        // Set height dynamically for editor containers and CodeMirror
+        document.querySelectorAll('.editor').forEach(editor => {
+            editor.style.height = `${editorHeight}px`; // Set container height
+        });
+
+        // Initialize CodeMirror editors
+        editor1 = CodeMirror(document.getElementById('editor1'), {
+            mode: "application/json",
+            lineNumbers: true,
+            theme: "default",
+            value: ""
+        });
+
+        editor2 = CodeMirror(document.getElementById('editor2'), {
+            mode: "application/json",
+            lineNumbers: true,
+            theme: "default",
+            value: ""
+        });
+
+        // Adjust CodeMirror's internal height
+        editor1.setSize(null, editorHeight); // Width is auto, height matches the calculated value
+        editor2.setSize(null, editorHeight);
+    };
+
+</script>
+</body>
+</html>
+
