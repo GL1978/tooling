@@ -372,58 +372,58 @@
       return table;
     }
 
-let activeFilters = { cid: false, deprecation: false };
+    let activeFilters = { cid: false, deprecation: false };
 
-function filterTable() {
-  const searchTerm = document.getElementById("search-bar").value.toLowerCase();
-  const searchColumn = document.getElementById("search-column").value;
-  const table = document.querySelector("#schema-table table");
-  const rows = table.querySelectorAll("tr");
+    function filterTable() {
+      const searchTerm = document.getElementById("search-bar").value.toLowerCase();
+      const searchColumn = document.getElementById("search-column").value;
+      const table = document.querySelector("#schema-table table");
+      const rows = table.querySelectorAll("tr");
 
-  rows.forEach((row, index) => {
-    if (index === 0) return; // Skip header row
+      rows.forEach((row, index) => {
+        if (index === 0) return; // Skip header row
 
-    const cells = Array.from(row.cells);
-    let matches = false;
+        const cells = Array.from(row.cells);
+        let matches = false;
 
-    // Search logic
-    if (searchColumn === "all") {
-      matches = cells.some(cell => cell.textContent.toLowerCase().includes(searchTerm));
-    } else if (searchColumn === "field") {
-      matches = cells[1].textContent.toLowerCase().includes(searchTerm); // Field is in the second column (index 1)
+        // Search logic
+        if (searchColumn === "all") {
+          matches = cells.some(cell => cell.textContent.toLowerCase().includes(searchTerm));
+        } else if (searchColumn === "field") {
+          matches = cells[1].textContent.toLowerCase().includes(searchTerm); // Field is in the second column (index 1)
+        }
+
+        // Filter logic: Check if filters are active and if the row matches those filters
+        const docCell = cells[4]; // Documentation column (index 4)
+        const matchesCid = docCell && docCell.textContent.includes("cid: true");
+        const matchesDeprecation = docCell && (docCell.textContent.includes("deprecated: true") || docCell.textContent.includes("deprecationRemarks"));
+        console.log(docCell.textContent, matchesCid, matchesDeprecation);
+
+        // Apply filters
+        if (activeFilters.cid && !matchesCid) {
+          matches = false;
+        }
+        if (activeFilters.deprecation && !matchesDeprecation) {
+          matches = false;
+        }
+
+        // Display or hide the row based on the combination of search and filter results
+        row.style.display = matches ? "" : "none";
+      });
     }
 
-    // Filter logic: Check if filters are active and if the row matches those filters
-    const docCell = cells[4]; // Documentation column (index 4)
-    const matchesCid = docCell && docCell.textContent.includes("cid: true");
-    const matchesDeprecation = docCell && (docCell.textContent.includes("deprecated: true") || docCell.textContent.includes("deprecationRemarks"));
-    console.log(docCell.textContent, matchesCid, matchesDeprecation);
+    function toggleFilter(type) {
+      // Toggle the filter state for cid or deprecation
+      activeFilters[type] = !activeFilters[type];
 
-    // Apply filters
-    if (activeFilters.cid && !matchesCid) {
-      matches = false;
+      // Update the button styles based on the filter state
+      const button = document.getElementById(type === 'cid' ? 'filter-cid' : 'filter-deprecation');
+      button.style.backgroundColor = activeFilters[type] ? '#cce5cc' : '#dff0d8';
+      button.style.color = activeFilters[type] ? '#2b542c' : '#3c763d';
+
+      // Call filterTable to immediately apply the filters
+      filterTable();
     }
-    if (activeFilters.deprecation && !matchesDeprecation) {
-      matches = false;
-    }
-
-    // Display or hide the row based on the combination of search and filter results
-    row.style.display = matches ? "" : "none";
-  });
-}
-
-function toggleFilter(type) {
-  // Toggle the filter state for cid or deprecation
-  activeFilters[type] = !activeFilters[type];
-
-  // Update the button styles based on the filter state
-  const button = document.getElementById(type === 'cid' ? 'filter-cid' : 'filter-deprecation');
-  button.style.backgroundColor = activeFilters[type] ? '#cce5cc' : '#dff0d8';
-  button.style.color = activeFilters[type] ? '#2b542c' : '#3c763d';
-
-  // Call filterTable to immediately apply the filters
-  filterTable();
-}
 
     // Flatten schema and render table
     const flatSchema = flattenSchema(schema);
