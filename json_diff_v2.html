@@ -22,11 +22,32 @@
 
         .textarea-container {
             position: relative;
-            flex: 1; /* Makes both containers equal width */
-            min-width: 300px; /* Prevents shrinking too much */
-            max-width: 50%; /* Ensures editors don't exceed half the screen width */
-            box-sizing: border-box; /* Include padding in width calculation */
-            margin: 10px 5px 0 0; /* Adds spacing between buttons and other elements */
+            flex: 1; /* Ensures equal width for both containers */
+            min-width: 300px; /* Prevent shrinking below 300px */
+            max-width: 50%; /* Prevents exceeding half the screen width */
+            box-sizing: border-box;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1; /* Takes available space */
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        select {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
 
         .editor {
@@ -39,15 +60,15 @@
         }
 
         button {
-            padding: 10px 20px;
+            padding: 8px 12px;
             background-color: #007BFF;
             color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
-            margin-right: 5px;
         }
+
         button:hover {
             background-color: #0056b3;
         }
@@ -105,20 +126,35 @@
 <h1>Nested JSON Comparator</h1>
 <p>Enter two JSON objects for comparison:</p>
 <div class="container">
-    <div class="textarea-container">
-        <label for="transactionId1">Enter Transaction Id:</label><br>
-        <input type="text" id="transactionId1" placeholder="Transaction ID 1">
+    <div class="textarea-container" id="container1">
+        <div class="controls">
+            <input type="text" id="transactionId1" placeholder="Transaction ID 1">
+            <select id="eventType1">
+                <option value="raw">raw</option>
+                <option value="conformed">conformed</option>
+                <option value="enriched" selected>enriched</option>
+            </select>
+        </div>
         <button onclick="mockSearch('editor1')">Search</button>
         <button onclick="formatJSON(editor1)">Format</button>
         <button onclick="clearEditor(editor1)">Clear</button>
+        <button id="toggleBtn1" onclick="toggleTextarea('editor1', 'toggleBtn1')">Hide</button>
         <div id="editor1" class="editor"></div>
     </div>
-    <div class="textarea-container">
-        <label for="transactionId2">Enter Transaction Id:</label><br>
-        <input type="text" id="transactionId2" placeholder="Transaction ID 2">
+
+    <div class="textarea-container" id="container2">
+        <div class="controls">
+            <input type="text" id="transactionId2" placeholder="Transaction ID 2">
+            <select id="eventType2">
+                <option value="raw">raw</option>
+                <option value="conformed">conformed</option>
+                <option value="enriched" selected>enriched</option>
+            </select>
+        </div>
         <button onclick="mockSearch('editor2')">Search</button>
         <button onclick="formatJSON(editor2)">Format</button>
         <button onclick="clearEditor(editor2)">Clear</button>
+        <button id="toggleBtn2" onclick="toggleTextarea('editor2', 'toggleBtn2')">Hide</button>
         <div id="editor2" class="editor"></div>
     </div>
 </div>
@@ -163,23 +199,20 @@
         editor.setValue('');
     }
 
-    // Mock API response function
-    async function mockApi(transactionId) {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    transactionId: transactionId,
-                    status: "Success",
-                    details: {
-                        amount: Math.random() * 1000,
-                        timestamp: new Date().toISOString(),
-                    },
-                });
-            }, 1000);
-        });
+    function toggleTextarea(editorId, buttonId) {
+        const editor = document.getElementById(editorId);
+        const button = document.getElementById(buttonId);
+
+        if (editor.classList.contains('hidden')) {
+            editor.classList.remove('hidden');
+            button.textContent = 'Hide';
+        } else {
+            editor.classList.add('hidden');
+            button.textContent = 'Show';
+        }
     }
 
-    async function searchAndCompareJSONs() {
+        async function searchAndCompareJSONs() {
         const transactionId1 = document.getElementById("transactionId1").value.trim();
         const transactionId2 = document.getElementById("transactionId2").value.trim();
 
