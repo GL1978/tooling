@@ -239,23 +239,25 @@
             const obj1 = JSON.parse(json1);
             const obj2 = JSON.parse(json2);
 
-            // Flatten the JSON objects
-            const flattened1 = flattenJSON(obj1);
-            const flattened2 = flattenJSON(obj2);
+            // Flatten the JSON objects while preserving key order
+            const flattened1 = flattenJSONWithOrder(obj1);
+            const flattened2 = flattenJSONWithOrder(obj2);
 
-            // Get all unique keys
-            const allKeys = getUnionOfKeys([flattened1, flattened2]);
+            // Get the union of all keys in their original JSON order
+            const allKeys = [...new Set([...Object.keys(flattened1), ...Object.keys(flattened2)])];
 
             // Populate the comparison table
             const headerRow = comparisonTable.insertRow();
-            headerRow.innerHTML = `<th>Key</th><th>Value 1</th><th>Value 2</th>`;
+            headerRow.innerHTML = `<th>#</th><th>Key</th><th>Value 1</th><th>Value 2</th>`;
 
-            allKeys.forEach(key => {
+            allKeys.forEach((key, index) => {
                 const row = comparisonTable.insertRow();
-                const cellKey = row.insertCell(0);
-                const cellValue1 = row.insertCell(1);
-                const cellValue2 = row.insertCell(2);
+                const cellRowNumber = row.insertCell(0);
+                const cellKey = row.insertCell(1);
+                const cellValue1 = row.insertCell(2);
+                const cellValue2 = row.insertCell(3);
 
+                cellRowNumber.textContent = index + 1; // Row number
                 cellKey.textContent = key;
                 cellValue1.textContent = flattened1[key] !== undefined ? flattened1[key] : 'N/A';
                 cellValue2.textContent = flattened2[key] !== undefined ? flattened2[key] : 'N/A';
@@ -267,6 +269,19 @@
         } catch (err) {
             alert('Error during comparison: ' + err.message);
         }
+    }
+
+    // Flatten JSON with order preservation
+    function flattenJSONWithOrder(obj, parentKey = '', result = {}) {
+        for (let key of Object.keys(obj)) {
+            const newKey = parentKey ? `${parentKey}.${key}` : key;
+            if (typeof obj[key] === 'object' && obj[key] !== null) {
+                flattenJSONWithOrder(obj[key], newKey, result);
+            } else {
+                result[newKey] = obj[key];
+            }
+        }
+        return result;
     }
 
     // Event listeners for buttons
@@ -304,4 +319,3 @@
 </script>
 </body>
 </html>
-
